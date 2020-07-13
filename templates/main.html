@@ -44,6 +44,20 @@
                             </template>
                         </el-table-column>
 
+                        <el-table-column prop="team" label="人物" width="100">
+                            <template slot-scope="scope">
+                                <!-- 显示 人物操作相关 -->
+                                <yd-line-user :row="scope.row" />
+                            </template>
+                        </el-table-column>
+
+                        <el-table-column prop="team" label="背包" width="100">
+                            <template slot-scope="scope">
+                                <!-- 显示 背包操作相关 -->
+                                <yd-line-bag :row="scope.row" />
+                            </template>
+                        </el-table-column>
+
                         <el-table-column prop="team" label="队伍(队长)" width="100">
                             <template slot-scope="scope">
                                 <!-- 显示 队伍操作相关 -->
@@ -106,7 +120,8 @@
                 </el-footer>
             </el-container>
 
-            <el-drawer :visible.sync="official_show" direction="ltr" :with-header="false" :destroy-on-close="true" size="95%">
+            <el-drawer :visible.sync="official_show" direction="ltr" :with-header="false" :destroy-on-close="true"
+                size="95%">
                 <iframe :src="official" style="width: 100%; height: 100%;"></iframe>
             </el-drawer>
 
@@ -167,6 +182,51 @@
     </el-popover>
 </template>
 
+<!-- 行内 人物操作 -->
+<template component-name="yd-line-user" props="row">
+    <el-popover trigger="hover" placement="right" title="人物操作">
+        <template>
+            <!-- 顶部操作按钮 -->
+            <el-row v-if="row.userInfoObj">
+                <el-button type="primary" plain size="mini" @click="getUserInfo(row.email)">
+                    刷新</el-button>
+                <el-button type="primary" plain size="mini" @click="upPlayerLevel(row.email)">
+                    升级</el-button>
+            </el-row>
+            <el-row v-if="row.userInfoObj">
+                <span>当前经验: {{Math.floor(row.userInfoObj.user.exp)}};</span>
+                <span>升级需要: {{Math.floor(row.userInfoObj.nextLevelGetExp)}};</span>
+            </el-row>
+        </template>
+
+        <div slot="reference" class="name-wrapper">
+            <span v-if="row.userInfoObj">{{ row.userInfoObj.user.level + '级'}}</span>
+        </div>
+    </el-popover>
+</template>
+
+<!-- 行内 背包操作 -->
+<template component-name="yd-line-bag" props="row">
+    <el-popover trigger="hover" placement="right" title="背包操作">
+        <template>
+            <!-- 顶部操作按钮 -->
+            <!-- <el-row>
+                <el-button type="primary" plain size="mini" @click="getMyGoods(row.email)">
+                    刷新</el-button>
+            </el-row> -->
+
+            <!-- 背包物品列表 -->
+            <el-row>
+                <yd-line-goods :row="row" v-if="row.bagInfoObj" />
+            </el-row>
+        </template>
+
+        <div slot="reference" class="name-wrapper">
+            <span v-if="row.bagInfoObj">{{ '物品数' + row.bagInfoObj.count }}</span>
+        </div>
+    </el-popover>
+</template>
+
 <!-- 行内 队伍操作 -->
 <template component-name="yd-line-team" props="row">
     <el-popover trigger="hover" placement="right" title="队伍操作">
@@ -208,9 +268,34 @@
     </el-popover>
 </template>
 
+<!-- 背包-物品列表 -->
+<template component-name="yd-line-goods" props="row">
+    <el-table :data="row.bagInfoObj.goods" border style="width: 370px; margin-top: 5px;" size="mini" >
+        <el-table-column prop="goods_type" label="类别" width="100">
+        </el-table-column>
+        <el-table-column prop="goods.name" label="名称" width="100" >
+        </el-table-column>
+        <el-table-column prop="goods.price" label="价格" width="100">
+        </el-table-column>
+        <el-table-column prop="count" label="数量" width="50">
+        </el-table-column>
+        <!-- <el-table-column prop="address" label="加入">
+            <template slot="header" slot-scope="scope_team">
+                <el-button type="primary" plain size="mini" @click="getTeamList(row.email, row.map.id)">刷新</el-button>
+            </template>
+            <template slot-scope="scope_team">
+                <el-button size="mini" plain @click="addTeam(row.email, scope_team.row._id)">加入</el-button>
+            </template>
+        </el-table-column> -->
+    </el-table>
+</template>
+
 <!-- 地图内 队伍列表 -->
 <template component-name="yd-line-teams" props="row">
-    <el-table :data="row.teams" border style="width: 370px; margin-top: 5px;" size="mini">
+    <el-table :data="row.teams.filter(data => !search 
+        || data.combat.name.toLowerCase().includes(search.toLowerCase()) 
+        || data.leader.nickname.toLowerCase().includes(search.toLowerCase()))" 
+        border style="width: 450px; margin-top: 5px;" size="mini">
         <el-table-column prop="status" width="37">
             <template slot-scope="scope">
                 <i v-if="diffTime(row.start_bat_at) <= 180000" class="ali-icon icon-zhandouzuozhan"
@@ -234,6 +319,17 @@
             <template slot-scope="scope_team">
                 <el-button size="mini" plain @click="addTeam(row.email, scope_team.row._id)">加入</el-button>
             </template>
+        </el-table-column>
+        <el-table-column prop="address" label="加入">
+            <template slot="header" slot-scope="scope_search">
+                <el-input
+                  v-model="search"
+                  size="mini"
+                  placeholder="搜索地图和队长"/>
+              </template>
+            <!-- <template slot-scope="scope_search">
+                <span>1</span>
+            </template> -->
         </el-table-column>
     </el-table>
 </template>
@@ -272,6 +368,7 @@
             </span>
             <span v-else-if="message.win == 1">
                 {{ message.win == 1 ? '胜' : '败' }},
+                {{'经历' + message.round_num + '轮'}},
                 经验 +{{ message.my_exp || 0 }}
                 奖励 [{{ message.my_reward ? message.my_reward.join(',') : '无' }}]
             </span>

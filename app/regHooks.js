@@ -43,6 +43,8 @@ define(['YunDingOnlineSDK'], function (GameApi) {
 
         // 获取一些初始化的信息
         this.getTeamList(); // 获取地图队伍列表
+        this.userInfo(); // 获取人物信息
+        this.getMyGoods(); // 获取人物信息
     }
     loginCb.hookMark = "regHooks.loginCb";
     GameApi.regHookHandlers['gate.gateHandler.queryEntry'].push(loginCb);
@@ -58,6 +60,51 @@ define(['YunDingOnlineSDK'], function (GameApi) {
     };
     moveToNewMapCb.hookMark = "regHooks.moveToNewMapCb";
     GameApi.regHookHandlers['connector.playerHandler.moveToNewMap'].push(moveToNewMapCb);
+
+    // 获取人物信息
+    let getUserInfoCb = function (data) {
+        if (data.code != 200) {
+            app.$message.error(data.msg);
+            return;
+        }
+        console.log('getUserInfoCb', this.email, data);
+        let user = app.getUser(this.email)
+        let userInfoObj = Object.assign({}, data)
+
+        app.$set(user, 'userInfoObj', userInfoObj);
+
+    }
+    getUserInfoCb.hookMark = "regHooks.getUserInfoCb";
+    GameApi.regHookHandlers['connector.userHandler.userInfo'].push(getUserInfoCb);
+
+    // 升级人物
+    let upPlayerLevelCb = function (data) {
+        if (data.code != 200) {
+            app.$message.error(data.msg);
+            return;
+        }
+        console.log('upPlayerLevelCb', this.email);
+
+        app.game_list[this.email].userInfo();
+    }
+    upPlayerLevelCb.hookMark = "regHooks.upPlayerLevelCb";
+    GameApi.regHookHandlers['connector.userHandler.upPlayerLevel'].push(upPlayerLevelCb);
+
+    // 获取背包信息
+    let getMyGoodsCb = function (data) {
+        if (data.code != 200) {
+            app.$message.error(data.msg || '获取失败');
+            return;
+        }
+        console.log('getMyGoodsCb', this.email, data);
+        let user = app.getUser(this.email)
+        let bagInfoObj = Object.assign({}, data.data)
+
+        app.$set(user, 'bagInfoObj', bagInfoObj);
+
+    }
+    getMyGoodsCb.hookMark = "regHooks.getMyGoodsCb";
+    GameApi.regHookHandlers['connector.userHandler.getMyGoods'].push(getMyGoodsCb);
 
     // 创建队伍回调
     let createdTeamCb = function (data) {
@@ -218,7 +265,7 @@ define(['YunDingOnlineSDK'], function (GameApi) {
 
     // 战斗开始
     let onStartBatCb = function (data) {
-        console.log('onStartBatCb', data);
+        // console.log('onStartBatCb', data);
     }
     onStartBatCb.hookMark = "regHooks.onStartBatCb";
     GameApi.regHookHandlers['onStartBat'].push(onStartBatCb);

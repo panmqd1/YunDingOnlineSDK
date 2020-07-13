@@ -283,7 +283,7 @@
                         data.die_arr = data.die_arr.map((item) => {
                             return item.replace(/<[^>]+>/g, '');
                         })
-                        console.log(data.die_arr);
+                        // console.log(data.die_arr);
                     }
 
                     this.getUser(email).message = data;

@@ -117,6 +117,57 @@ define(['vue', 'data!app-template', 'css!ali-icon', 'css!app-style', 'css!elemen
     }
 
     /**
+     * 行内 人物信息操作
+     */
+    components['yd-line-user'] = {
+        methods: {
+            // 升级人物
+            upPlayerLevel: function (email) {
+                console.log('upPlayerLevel', email);
+                app.game_list[email].upPlayerLevel(email);
+            },
+            // 获取人物信息
+            getUserInfo: function (email) {
+                console.log('getUserInfo');
+                app.game_list[email].userInfo();
+                return null;
+            },
+        }
+    }
+
+    /**
+     * 行内 背包操作
+     */
+    components['yd-line-bag'] = {
+        methods: {
+            // 升级人物
+            // upPlayerLevel: function (email) {
+            //     console.log('upPlayerLevel', email);
+            //     app.game_list[email].upPlayerLevel(email);
+            // },
+            // 获取人物信息
+            getMyGoods: function (email) {
+                console.log('getMyGoods');
+                let page = 1
+                app.game_list[email].getMyGoods(email, page);
+                return null;
+            },
+        }
+    }
+
+    /**
+     * 行内 背包操作-物品列表
+     */
+    components['yd-line-goods'] = {
+        methods: {
+            // 获取人物信息
+            getRowStyle: function (styleStr) {
+                return styleStr;
+            },
+        }
+    }
+
+    /**
      * 行内 团队操作
      */
     components['yd-line-team'] = {
@@ -150,6 +201,11 @@ define(['vue', 'data!app-template', 'css!ali-icon', 'css!app-style', 'css!elemen
      * 行内 当前地图队伍列表
      */
     components['yd-line-teams'] = {
+        data() {
+            return {
+                search:''
+            }
+        },
         methods: {
             // 计算时间差
             diffTime: function (start_bat_at) {
